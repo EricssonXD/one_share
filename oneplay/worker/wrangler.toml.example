@@ -1,0 +1,17 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# OnePlay — Worker Configuration
+# File location: oneplay/worker/wrangler.toml
+# ─────────────────────────────────────────────────────────────────────────────
+
+name = "oneplay-worker"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+
+# Static frontend assets — built from ../frontend/dist before deploying
+[assets]
+directory = "../frontend/dist"
+binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "KEYS_KV"
+id = "YOUR_KV_ID"
