@@ -117,6 +117,19 @@ const injectStyles = () => {
     @keyframes fadeIn  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes pulse   { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
     @keyframes blink   { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+    /* Keys list layout helpers */
+    .key-row { display: flex; align-items: center; gap: 14px; padding: 13px 20px; flex-wrap: wrap; }
+    .key-row .key-meta { flex: 1; min-width: 0; }
+    .key-row .key-meta .id-line { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+    .key-row .key-meta .meta-line { font-family: 'Share Tech Mono', monospace; font-size: 10px; color: ${C.muted}; letter-spacing: 0.04em; }
+    .key-row .key-actions { display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap; }
+
+    /* Mobile: stack text above actions for better layout */
+    @media (max-width: 540px) {
+      .key-row { flex-direction: column; align-items: stretch; padding: 12px 16px; }
+      .key-row .key-meta { order: 1; margin-bottom: 10px; }
+      .key-row .key-actions { order: 2; justify-content: flex-end; }
+    }
   `;
   document.head.appendChild(style);
 };
@@ -469,17 +482,17 @@ function AdminPanel({ password, onBack, onLogout }) {
           </div>
         ) : (
           keys.map((k, i) => (
-            <div key={k.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "13px 20px", borderBottom: i < keys.length - 1 ? `1px solid ${C.border}` : "none", opacity: k.used ? 0.55 : 1, flexWrap: "wrap" }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+            <div key={k.id} className="key-row" style={{ borderBottom: i < keys.length - 1 ? `1px solid ${C.border}` : "none", opacity: k.used ? 0.55 : 1 }}>
+              <div className="key-meta" style={{ flex: 1, minWidth: 0 }}>
+                <div className="id-line" style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
                   <span style={{ fontFamily: "'Share Tech Mono', monospace", color: k.used ? C.dim : C.text, fontSize: 15, letterSpacing: "0.15em" }}>{k.id}</span>
                   <Badge used={k.used} />
                 </div>
-                <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: C.muted, letterSpacing: "0.04em" }}>
+                <div className="meta-line" style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: 10, color: C.muted, letterSpacing: "0.04em" }}>
                   {k.label} · created {fmt(k.createdAt)}{k.used && k.usedAt ? ` · played ${fmt(k.usedAt)}` : ""}
                 </div>
               </div>
-              <div style={{ display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap" }}>
+              <div className="key-actions" style={{ display: "flex", gap: 8, flexShrink: 0, flexWrap: "wrap" }}>
                 {!k.used && <Btn onClick={() => copy(k.id)} variant="ghost" style={{ fontSize: 10, padding: "5px 12px" }}>COPY</Btn>}
                 {k.used && (
                   <Btn onClick={() => handleReactivate(k.id)} variant="ghost" style={{ fontSize: 10, padding: "5px 12px", color: "#5abf8a", borderColor: C.green }}>REACTIVATE</Btn>
