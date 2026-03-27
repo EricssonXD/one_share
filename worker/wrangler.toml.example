@@ -7,6 +7,10 @@ name = "oneplay-worker"
 main = "src/index.js"
 compatibility_date = "2024-09-23"
 
+# Local development secret (wrangler picks this up during wrangler dev)
+[vars]
+ADMIN_SECRET = "MYPASSWORD"
+
 # Static frontend assets — built from ../frontend/dist before deploying
 [assets]
 directory = "../frontend/dist"
