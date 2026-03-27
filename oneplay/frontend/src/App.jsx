@@ -204,53 +204,102 @@ function fmt(ts) {
 
 // ── Screen: Home ─────────────────────────────────────────────────────────────
 
-function HomeScreen({ onAdmin, onUser }) {
+function HomeScreen({ onAdmin, onUnlock }) {
+  const [key,  setKey]  = useState("");
+  const [err,  setErr]  = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const handleChange = (val) => {
+    const raw = val.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (raw.length <= 4) { setKey(raw); return; }
+    setKey(raw.slice(0, 4) + "-" + raw.slice(4, 8));
+  };
+
+  const handleUnlock = async () => {
+    const id = key.trim().toUpperCase();
+    if (id.length < 9 || busy) return;
+    setBusy(true);
+    setErr("");
+    try {
+      const data = await apiCheckKey(id);
+      if (data.used) { setErr("ACCESS DENIED — this key has already been played."); }
+      else           { onUnlock(data); return; }
+    } catch (e) {
+      if (e.message === "KEY_NOT_FOUND") setErr("INVALID KEY — check the code and try again.");
+      else setErr("Could not reach the server. Try again.");
+    }
+    setBusy(false);
+  };
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh", padding: 32, animation: "fadeIn 0.5s ease" }}>
-      <Logo size={44} />
-      <p style={{ fontFamily: "'Crimson Pro', serif", fontStyle: "italic", color: C.muted, marginTop: 12, fontSize: 18, letterSpacing: "0.05em" }}>
+    <div style={{ position: "relative", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 32, animation: "fadeIn 0.5s ease" }}>
+
+      {/* Admin button — top right corner */}
+      <button
+        onClick={onAdmin}
+        style={{
+          position: "fixed", top: 20, right: 24,
+          background: "transparent",
+          border: `1px solid ${C.border}`,
+          borderRadius: 4,
+          color: C.dim,
+          fontFamily: "'Share Tech Mono', monospace",
+          fontSize: 10,
+          letterSpacing: "0.15em",
+          padding: "5px 12px",
+          cursor: "pointer",
+          transition: "border-color 0.2s, color 0.2s",
+          zIndex: 10,
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.borderHi; e.currentTarget.style.color = C.muted; }}
+        onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.dim; }}
+      >
+        ADMIN
+      </button>
+
+      {/* Logo + tagline */}
+      <Logo size={40} />
+      <p style={{ fontFamily: "'Crimson Pro', serif", fontStyle: "italic", color: C.muted, marginTop: 10, fontSize: 17, letterSpacing: "0.05em" }}>
         one key · one play · then silence
       </p>
 
-      <div style={{ marginTop: 64, display: "flex", gap: 16, flexWrap: "wrap", justifyContent: "center" }}>
-        {[
-          {
-            icon: (
-              <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-                <rect x="6" y="14" width="24" height="16" rx="2" stroke={C.gold} strokeWidth="1.2" />
-                <path d="M12 14V10a6 6 0 0 1 12 0v4" stroke={C.gold} strokeWidth="1.2" strokeLinecap="round" />
-                <circle cx="18" cy="22" r="2" fill={C.gold} />
-              </svg>
-            ),
-            label: "I HAVE A KEY", sub: "Redeem your access",
-            color: C.gold, onClick: onUser, accent: true,
-          },
-          {
-            icon: (
-              <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-                <circle cx="18" cy="18" r="12" stroke={C.muted} strokeWidth="1.2" />
-                <path d="M18 12v6l4 2" stroke={C.muted} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            ),
-            label: "ADMIN PANEL", sub: "Manage audio keys",
-            color: C.muted, onClick: onAdmin, accent: false,
-          },
-        ].map((card) => (
-          <div
-            key={card.label}
-            onClick={card.onClick}
-            style={{ border: `1px solid ${C.border}`, borderRadius: 6, padding: "32px 40px", cursor: "pointer", background: C.surface, textAlign: "center", minWidth: 200, transition: "border-color 0.2s, background 0.2s" }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = card.accent ? C.gold : C.borderHi; e.currentTarget.style.background = C.surfaceHi; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.surface; }}
-          >
-            <div style={{ marginBottom: 16 }}>{card.icon}</div>
-            <div style={{ fontFamily: "'Share Tech Mono', monospace", color: card.color, fontSize: 13, letterSpacing: "0.15em" }}>{card.label}</div>
-            <div style={{ fontFamily: "'Crimson Pro', serif", color: C.muted, fontSize: 14, marginTop: 6 }}>{card.sub}</div>
-          </div>
-        ))}
+      {/* Key entry */}
+      <div style={{ marginTop: 56, width: "100%", maxWidth: 360 }}>
+        <input
+          value={key}
+          onChange={(e) => handleChange(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
+          placeholder="XXXX-XXXX"
+          maxLength={9}
+          autoFocus
+          style={{
+            width: "100%",
+            background: C.surface,
+            border: `1px solid ${C.border}`,
+            borderRadius: 4,
+            color: C.gold,
+            fontFamily: "'Share Tech Mono', monospace",
+            fontSize: 28,
+            padding: "14px 20px",
+            textAlign: "center",
+            letterSpacing: "0.3em",
+            outline: "none",
+            transition: "border-color 0.2s",
+          }}
+          onFocus={(e) => (e.target.style.borderColor = C.goldDim)}
+          onBlur={(e)  => (e.target.style.borderColor = C.border)}
+        />
+        <ErrorMsg text={err} />
+        <Btn
+          onClick={handleUnlock}
+          disabled={key.length < 9 || busy}
+          style={{ width: "100%", marginTop: 12, padding: "12px 0", fontSize: 13, letterSpacing: "0.15em" }}
+        >
+          {busy ? "VERIFYING..." : "UNLOCK"}
+        </Btn>
       </div>
 
-      <p style={{ fontFamily: "'Share Tech Mono', monospace", color: C.dim, fontSize: 10, marginTop: 64, letterSpacing: "0.1em", textAlign: "center" }}>
+      <p style={{ fontFamily: "'Share Tech Mono', monospace", color: C.dim, fontSize: 10, marginTop: 56, letterSpacing: "0.1em", textAlign: "center" }}>
         KEYS ARE SINGLE-USE · ONCE PLAYED, ACCESS IS PERMANENTLY REVOKED
       </p>
     </div>
@@ -692,7 +741,7 @@ export default function App() {
       {screen === "home" && (
         <HomeScreen
           onAdmin={() => setScreen(adminPw ? "admin" : "admin-login")}
-          onUser={()  => setScreen("redeem")}
+          onUnlock={(data) => { setKeyInfo(data); setScreen("player"); }}
         />
       )}
       {screen === "admin-login" && (

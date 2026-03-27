@@ -21,8 +21,8 @@ echo "──────────────────"
 echo ""
 echo "▶  Building frontend..."
 cd "$FRONTEND_DIR"
-npm install --silent
-npm run build
+bun install --frozen-lockfile
+bun run build
 
 echo "✓  Frontend built → frontend/dist/"
 

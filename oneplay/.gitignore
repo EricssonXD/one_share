@@ -1,8 +1,8 @@
 # ── Dependencies ──────────────────────────────────────────────────────────────
 node_modules/
 .pnp
-.pnp.js
-
+.pnp.js# npm lockfile — project uses bun
+package-lock.json
 # ── Build output ──────────────────────────────────────────────────────────────
 frontend/dist/
 
